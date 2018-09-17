@@ -1,5 +1,9 @@
+from flask import request, redirect
+
 from sqlalchemy import create_engine
 from sqlalchemy.orm import scoped_session, sessionmaker
+
+from functools import wraps
 
 from models import User
 
@@ -33,5 +37,26 @@ def authorize_user(steamid):
         db.commit()
 
         return identifier
+
+def valid_user_identifier(identifier):
+    db = Session()
+
+    if db.query(User).filter(User.identifier == identifier).count():
+        return True
+    else:
+        return False
+
+
+def validate_user_identifier(func):
+    @wraps(func)
+    def validate():
+        print('Identifier exists')
+
+        if 'identifier' in request.cookies:
+            if validate_user_identifier:
+                return func()
+        else:
+            return redirect('/login')
+    return validate
 
     

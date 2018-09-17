@@ -103,3 +103,9 @@ class Active_card(Base):
     def __init__(self, card_identifier, game_identifier):
         self.card_identifier = card_identifier
         self.game_identifier = game_identifier
+
+class Empty(object):
+    def __getattr__(self, prop):
+        return self.__dict__[prop]
+    def __setattr__(self, prop, val):
+        self.__dict__[prop] = val

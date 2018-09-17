@@ -1,0 +1,16 @@
+<html>
+<head>
+    <link rel="stylesheet" href="{{ url_for('static',filename='css/index.css') }}">
+</head>
+<body>
+    <h1 id="website-label" class="text-element">Welcome to {{ website_info.name }}</h1>
+
+    <form id="bet-form" method="POST" action="/join">
+        <h2 id="form-label" class="text-element form-input">Start game</h2>
+
+        <input type="text" name="bet-amount" id="bet-input" class="form-input" placeholder="Enter bet amount"/>
+        <button type="submit" id="submit-button" class="form-input">Place bet</button>
+    </form>
+
+</body>
+</html>
