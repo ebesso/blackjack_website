@@ -76,15 +76,13 @@ class Game(Base):
     player = Column('player', String, unique=True)
     bet = Column('bet', Integer, nullable=False)
 
-    player_hand_identifier = Column('player_hand_identifier', String, unique=True)
     cpu_hand_identifier = Column('cpu_hand_identifier', String, unique=True)
 
     active = Column('active', Boolean, nullable=False)
 
-    def __init__(self, player, bet, player_hand_identifier, cpu_hand_identifier):
+    def __init__(self, player, bet, cpu_hand_identifier):
         self.player = player
         self.bet = bet
-        self.player_hand_identifier = player_hand_identifier
         self.cpu_hand_identifier = cpu_hand_identifier
         self.active = True
 

@@ -22,7 +22,7 @@ def login_handling(steam_response):
 
     identifier = authorize_user(steamid)
 
-    resp = make_response('authorized')
+    resp = make_response(redirect('/'))
     resp.set_cookie('identifier', identifier)
 
     return resp

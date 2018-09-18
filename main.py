@@ -1,12 +1,19 @@
-from flask import Flask, render_template
+from flask import Flask, render_template, request
 from flask_socketio import SocketIO
 
 from initializer import init_cards, init_database
-from user_handler import validate_user_identifier
+
+from user_handler import validate_user_identifier, validate_client
+from game_handler import init_game, update_table, get_cpu_identifier, update_table
+import deck_handler
 
 import configuration_handler
 
+from models import Status
+
 from user_login import user_login_bp
+
+import json
 
 app = Flask(__name__)
 
@@ -15,6 +22,7 @@ app.debug = True
 
 init_database()
 init_cards()
+
 
 app.register_blueprint(user_login_bp)
 
@@ -27,20 +35,26 @@ def index():
 @app.route('/join', methods=['POST'])
 @validate_user_identifier
 def join_game():
-    return render_template('blackjack.html', website_info=configuration_handler('website'))
+    init_game(request.cookies.get('identifier'), float(request.form['bet-amount']))
+    return render_template('blackjack.html', website_info=configuration_handler.load('website'))
 
-@socketio.on('connect')
+@socketio.on('client_connected')
 @validate_client
 def client_connect(data):
-    print('Client has valid game session')
-    socketio.emit('New-round', data=generate_hand())
+    deck_handler.draw(data['identifier'], Status.visible)
+    deck_handler.draw(data['identifier'], Status.hidden)
 
-@socketio.on('draw')
+    deck_handler.draw(get_cpu_identifier(data['identifier']), Status.visible)
+    deck_handler.draw(get_cpu_identifier(data['identifier']), Status.hidden)
+    
+    socketio.emit('update_table', json.dumps(update_table(data['identifier'])))
 
-@socketio.on('disconnect')
+@socketio.on('client_hit')
 @validate_client
-def client_disconnect(data):
-    print()
+def client_hit(data):
+    deck_handler.draw(data['identifier'], Status.visible)
+
+    socketio.emit('update_table', json.dumps(update_table(data['identifier'])))
 
 if __name__ == '__main__':
-    socketio.run(app, host='0.0.0.0')
+    socketio.run(app, host='0.0.0.0' , port=5000)

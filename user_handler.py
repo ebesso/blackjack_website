@@ -7,6 +7,8 @@ from functools import wraps
 
 from models import User
 
+from game_handler import isIngame
+
 import os, random, string
 
 db_engine = create_engine(os.environ['blackjack_database_url'])
@@ -41,6 +43,8 @@ def authorize_user(steamid):
 def valid_user_identifier(identifier):
     db = Session()
 
+    print('Validating identifier: ' + identifier)
+
     if db.query(User).filter(User.identifier == identifier).count():
         return True
     else:
@@ -50,13 +54,30 @@ def valid_user_identifier(identifier):
 def validate_user_identifier(func):
     @wraps(func)
     def validate():
-        print('Identifier exists')
-
         if 'identifier' in request.cookies:
-            if validate_user_identifier:
+            print('identifier exists')
+            if valid_user_identifier(request.cookies.get('identifier')):
+                print('identifier is valid')
                 return func()
+            else:
+                print('identifier is invalid')
+                return redirect('/login')
+        else:
+            print('identifier does not exist')
+            return redirect('/login')
+    return validate
+
+def validate_client(func):
+    @wraps(func)
+    def validate(data):
+        if 'identifier' in data:
+            if isIngame(data['identifier']):
+                return func(data)
+            else:
+                return redirect('/')
         else:
             return redirect('/login')
+        
     return validate
 
     

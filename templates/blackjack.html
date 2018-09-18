@@ -1,0 +1,21 @@
+<html>
+<head>
+    <script src="{{ url_for('static',filename='js/jquery.min.js') }}"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/2.1.1/socket.io.dev.js"></script>
+
+    <script src="{{ url_for('static',filename='js/blackjack.js') }}"></script>
+
+    <link rel="stylesheet" href="{{ url_for('static',filename='css/blackjack.css') }}"/>
+
+
+</head>
+<body id="{{ website_info.url }}">
+    <div id="player-hand"></div>
+    <div id="cpu-hand"></div>
+
+    <div id="controls">
+        <button class="control-button" id="hit-button">Hit</button>
+        <button class="control-button" id="stand-button">Stand</button>
+    </div>
+</body>
+</html>

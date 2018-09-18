@@ -1,0 +1,50 @@
+body{
+    background-image: url('../images/table.png');
+    
+    background-repeat: no-repeat;
+    background-position: center center;
+    background-attachment: fixed;
+    background-size: cover;
+}
+
+#player-hand{
+    float: left;
+
+    width: 40%;
+    
+    margin-left: 3%;
+    margin-top: 3%;
+}
+#player-hand img{
+    width: 30%;
+    height: auto;
+}
+#cpu-hand{
+    float: right;
+
+    width: 40%;
+    margin-right: 3%;
+
+    margin-top: 3%;
+}
+#cpu-hand img{
+    float: right;
+
+    width: 30%;
+    height: auto;
+}
+#controls{
+    float: left;
+    width: 100%;
+}
+.control-button{
+    display: block;
+    
+    width: 10%;
+    height: auto;
+
+    margin-left: 45%;
+    margin-top: 0.2%;
+
+    font-size: 2vw;
+}
