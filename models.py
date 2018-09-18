@@ -27,6 +27,18 @@ class Ranks(enum.Enum):
 
     ace = 16
 
+class Game_state(enum.Enum):
+    player_busted = 1
+    cpu_busted = 2
+
+    player_blackjack = 3
+    cpu_blackjack = 4
+
+    player_lead = 5
+    cpu_lead = 6
+
+    draw = 7
+
 class Status(enum.Enum):
     visible = 1
     hidden = 2
@@ -78,13 +90,10 @@ class Game(Base):
 
     cpu_hand_identifier = Column('cpu_hand_identifier', String, unique=True)
 
-    active = Column('active', Boolean, nullable=False)
-
     def __init__(self, player, bet, cpu_hand_identifier):
         self.player = player
         self.bet = bet
         self.cpu_hand_identifier = cpu_hand_identifier
-        self.active = True
 
 class Active_card(Base):
     __tablename__ = 'active_cards'

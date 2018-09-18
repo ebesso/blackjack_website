@@ -48,3 +48,11 @@ body{
 
     font-size: 2vw;
 }
+#result-label{
+    font-family: 'Trebuchet MS', sans-serif;
+    font-size: 2vw;
+
+    color: gold;
+
+    text-align: center;
+}

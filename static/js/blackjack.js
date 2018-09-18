@@ -1,5 +1,8 @@
 $(document).ready(function(){
 
+    $('#replay-button').hide()
+
+
     var connection_string = document.getElementsByTagName('body')[0].getAttribute('id');
     console.log('Trying to connect to ' + connection_string);
 
@@ -29,8 +32,36 @@ $(document).ready(function(){
         console.log('Updated table');
     });
 
+    socket.on('game_finished', function(data){
+
+        var game_data = JSON.parse(data);
+        
+        document.getElementById('player-hand').innerHTML = ''
+        document.getElementById('cpu-hand').innerHTML = ''
+
+
+        for(var i = 0; i < game_data.player_cards.length; i++){
+            displayCard(game_data.player_cards[i].image, "player-hand");
+        }
+        for(var i = 0; i < game_data.cpu_cards.length; i++){
+            displayCard(game_data.cpu_cards[i].image, "cpu-hand");
+        }
+
+        for (let el of document.querySelectorAll('.play-button')) el.style.visibility = 'hidden';
+        $('#replay-button').show()
+        
+
+        document.getElementById('result-label').innerHTML = game_data.result;
+    });
+
     $('#hit-button').click(function(){
         socket.emit('client_hit', {'identifier': getCookie('identifier')});
+    });
+    $('#stand-button').click(function(){
+        socket.emit('client_stand', {'identifier': getCookie('identifier')});
+    });
+    $('#replay-button').click(function(){
+        window.location.replace('/')
     });
 
     function displayCard(image_src, hand){
