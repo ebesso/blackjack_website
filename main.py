@@ -14,7 +14,7 @@ from models import Status, Game_state
 
 from user_login import user_login_bp
 
-import json
+import json, os
 
 app = Flask(__name__)
 
@@ -89,4 +89,5 @@ def client_doubledown(data):
     
 
 if __name__ == '__main__':
-    socketio.run(app, host='0.0.0.0' , port=5000)
+    port = int(os.environ.get('PORT', 5000))        
+    socketio.run(app, host='0.0.0.0' , port=port)

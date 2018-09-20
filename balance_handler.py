@@ -9,7 +9,7 @@ import configuration_handler
 
 import os
 
-db_engine = create_engine(os.environ['blackjack_database_url'])
+db_engine = create_engine(os.environ['DATABASE_URL'])
 session_factory = sessionmaker(bind=db_engine)
 Session = scoped_session(session_factory)
 
