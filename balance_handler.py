@@ -25,7 +25,7 @@ def double_bet(identifier):
     game = db.query(Game).filter(Game.player == identifier).one()
 
     user = db.query(User).filter(User.identifier == identifier).one()
-    user -= game.bet
+    user.balance -= game.bet
     db.commit()
 
     game.bet = game.bet * 2
@@ -49,12 +49,13 @@ def payout_bet(identifier):
 
         print('Payed out ' + str(game.bet * float(payout_config.blackjack)))
 
-    elif game_state == Game_state.player_lead:
+    elif game_state == Game_state.player_lead or game_state == Game_state.cpu_busted:
         user = db.query(User).filter(User.identifier == identifier).one()
-        user.balacne += game.bet * float(payout_config.regular)
+        user.balance += game.bet * float(payout_config.regular)
         db.commit()
 
         print('Payed out ' + str(game.bet * float(payout_config.regular)))
+
     
 def current_bet(identifier):
     db = Session()

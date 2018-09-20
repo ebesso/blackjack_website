@@ -38,7 +38,8 @@ $(document).ready(function(){
         for(var i = 0; i < table_data.cpu_cards.length; i++){
             displayCard(table_data.cpu_cards[i].image, "cpu-hand");
         }
-        console.log('Bet amount: ' + table_data.bet);
+        document.getElementById('current-bet').innerHTML = 'Current bet ' + table_data.bet + '$';
+        
         console.log('Updated table');
     });
 

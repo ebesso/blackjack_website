@@ -56,3 +56,11 @@ body{
 
     text-align: center;
 }
+#current-bet{
+    font-family: 'Trebuchet MS', sans-serif;
+    font-size: 2vw;
+
+    color: gold;
+
+    text-align: center;
+}

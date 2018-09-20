@@ -4,7 +4,7 @@ from flask_socketio import SocketIO
 from initializer import init_cards, init_database
 
 from user_handler import validate_user_identifier, validate_client
-from game_handler import init_game, update_table, get_cpu_identifier, update_table, get_game_state, finish_game, simulate_cpu, doubledown_valid
+from game_handler import init_game, update_table, get_cpu_identifier, update_table, isGameOver, finish_game, simulate_cpu, doubledown_valid, reset_session
 from balance_handler import double_bet, sufficent_funds, current_bet, payout_bet
 import deck_handler
 
@@ -24,10 +24,12 @@ app.debug = True
 init_database()
 init_cards()
 
-
 app.register_blueprint(user_login_bp)
 
 socketio = SocketIO(app)
+@app.teardown_request
+def remove_session(ex=None):
+    reset_session()
 
 @app.route('/')
 def index():
@@ -53,9 +55,7 @@ def client_connect(data):
     
     socketio.emit('update_table', json.dumps(update_table(data['identifier'])))
 
-    game_state = get_game_state(data['identifier'])    
-
-    if game_state == Game_state.cpu_blackjack or game_state == Game_state.player_blackjack:
+    if isGameOver(data['identifier']):
         client_stand(data)
 
 @socketio.on('client_hit')
@@ -65,9 +65,7 @@ def client_hit(data):
 
     socketio.emit('update_table', json.dumps(update_table(data['identifier'])))
 
-    game_state = get_game_state(data['identifier'])
-
-    if game_state == Game_state.cpu_blackjack or game_state == Game_state.player_blackjack or game_state == Game_state.player_busted:
+    if isGameOver(data['identifier']):
         client_stand(data)
 
 @socketio.on('client_stand')
@@ -84,6 +82,7 @@ def client_doubledown(data):
         if sufficent_funds(data['identifier'], current_bet(data['identifier'])):
             deck_handler.draw(data['identifier'], Status.hidden)
             double_bet(data['identifier'])
+            socketio.emit('update_table', json.dumps(update_table(data['identifier'])))
             client_stand(data)
         else:
             socketio.emit('error', {'message': 'insufficent funds'})

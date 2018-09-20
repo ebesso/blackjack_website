@@ -11,6 +11,9 @@ db_engine = create_engine(os.environ['blackjack_database_url'])
 session_factory = sessionmaker(bind=db_engine)
 Session = scoped_session(session_factory)
 
+def reset_session():
+    Session.remove()
+
 def init_game(player, bet):
     db = Session()
 
@@ -106,23 +109,33 @@ def calculate_hand(identifier):
     hand = db.query(Active_card).filter(Active_card.owner == identifier).all()
 
     hand_value = 0
-    ace_hand_value = 0
+
+    contains_ace = False
 
     for card in hand:
         hand_value += db.query(Card).filter(Card.id == card.card_identifier).one().blackjack_value
+        if db.query(Card).filter(Card.id == card.card_identifier).one().rank == Ranks.ace:
+            contains_ace = True
+    
+    if contains_ace == False:
+        return hand_value
+    
+    if hand_value < 22:
+        return hand_value
     
     for card in hand:
         if db.query(Card).filter(Card.id == card.card_identifier).one().rank == Ranks.ace:
-            ace_hand_value = hand_value - 10
+            hand_value -= 10
+            if hand_value < 22:
+                return hand_value
     
-    if hand_value > 21 and ace_hand_value != 0:
-        return ace_hand_value
+    return hand_value
     
-    else:
-        return hand_value
+
     
 def get_game_state(identifier):
     db = Session()
+
     game = db.query(Game).filter(Game.player == identifier).one()
 
     player_value = calculate_hand(identifier)
@@ -137,11 +150,11 @@ def get_game_state(identifier):
     if player_value > 21:
         current_gamestate = Game_state.player_busted
     elif cpu_value > 21:
-        current_gamestate = Game_state.player_busted
+        current_gamestate = Game_state.cpu_busted
 
-    elif cpu_value == 21 and cpu_cards:
+    elif cpu_value == 21 and cpu_cards == 2:
         current_gamestate = Game_state.cpu_blackjack
-    elif player_value == 21 and player_cards:
+    elif player_value == 21 and player_cards == 2:
         current_gamestate = Game_state.player_blackjack
 
     elif player_value > cpu_value:
@@ -153,6 +166,13 @@ def get_game_state(identifier):
         current_gamestate = Game_state.draw
     
     return current_gamestate
+
+def isGameOver(identifier):
+    game_state = get_game_state(identifier)
+
+    if game_state == Game_state.cpu_blackjack or game_state == Game_state.player_blackjack or game_state == Game_state.player_busted:
+        return True
+    return False
 
 def simulate_cpu(identifier, socketio):
     db = Session()
