@@ -1,6 +1,5 @@
 from flask import Flask, Blueprint, current_app, redirect, make_response
 from flask_openid import OpenID
-from flask_login import login_user, logout_user, login_required, current_user
 
 from user_handler import authorize_user
 
