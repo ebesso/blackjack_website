@@ -1,7 +1,7 @@
 $(document).ready(function(){
 
     $('#replay-button').hide()
-
+    $('#doubledown-button').hide()
 
     var connection_string = document.getElementsByTagName('body')[0].getAttribute('id');
     console.log('Trying to connect to ' + connection_string);
@@ -18,9 +18,19 @@ $(document).ready(function(){
 
         var table_data = JSON.parse(data);
 
-        document.getElementById('player-hand').innerHTML = ''
-        document.getElementById('cpu-hand').innerHTML = ''
+        document.getElementById('player-hand').innerHTML = '';
+        document.getElementById('cpu-hand').innerHTML = '';
 
+        console.log(table_data.doubledown)
+
+        if (table_data.doubledown == true){
+            console.log('doubledown valid');
+            $('#doubledown-button').show();
+        }
+        else{
+            console.log('doubledown invalid');
+            $('#doubledown-button').hide();
+        }
 
         for(var i = 0; i < table_data.player_cards.length; i++){
             displayCard(table_data.player_cards[i].image, "player-hand");
@@ -28,7 +38,7 @@ $(document).ready(function(){
         for(var i = 0; i < table_data.cpu_cards.length; i++){
             displayCard(table_data.cpu_cards[i].image, "cpu-hand");
         }
-
+        console.log('Bet amount: ' + table_data.bet);
         console.log('Updated table');
     });
 
@@ -54,14 +64,24 @@ $(document).ready(function(){
         document.getElementById('result-label').innerHTML = game_data.result;
     });
 
+    socket.on('error', function(data){
+        var error_data = JSON.parse(data);
+
+        alert(error_data.message);
+    });
+
     $('#hit-button').click(function(){
         socket.emit('client_hit', {'identifier': getCookie('identifier')});
     });
     $('#stand-button').click(function(){
         socket.emit('client_stand', {'identifier': getCookie('identifier')});
     });
+    $('#doubledown-button').click(function(){
+        socket.emit('client_doubledown', {'identifier': getCookie('identifier')});
+    });
+
     $('#replay-button').click(function(){
-        window.location.replace('/')
+        window.location.reload();
     });
 
     function displayCard(image_src, hand){

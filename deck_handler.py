@@ -27,11 +27,9 @@ def draw(identifier, status):
 
     card = deck[random.randint(0, len(deck)) - 1]
 
-    print(card.id)
+    print('Card drawn with id ' + str(card.id))
 
     card.owner = identifier
     card.status = status
 
     db.commit()
-
-

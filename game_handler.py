@@ -1,7 +1,8 @@
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, scoped_session
 
-from models import Game, Active_card, Card, Status, Ranks, Game_state
+from models import Game, Active_card, Card, Status, Ranks, Game_state, User
+
 from deck_handler import init_deck, draw
 
 import os, random, string, json
@@ -18,12 +19,20 @@ def init_game(player, bet):
 
     cpu_hand_identifier = ''.join(random.choice(string.ascii_uppercase + string.digits) for _ in range(45))
 
+    user = db.query(User).filter(User.identifier == player).one()
+    user.balance -= bet
+    print('Removed bet amount from user')
+
     db.add(Game(player, bet, cpu_hand_identifier))
     db.commit()
+    print('Init game + commited to database')
+
 
     gameid = db.query(Game).filter(Game.player == player).one().id
 
     init_deck(gameid)
+    print('Init deck')
+
 
 def delete_game(gameid):
     db = Session()
@@ -54,10 +63,15 @@ def update_table(identifier):
     player_hand = db.query(Active_card).filter(Active_card.owner == identifier).all()
     cpu_hand = db.query(Active_card).filter(Active_card.owner == game.cpu_hand_identifier).all()
 
+    print('Got hands')
+
     table_data = {
         'player_cards': [],
-        'cpu_cards': []
+        'cpu_cards': [],
+        'doubledown': doubledown_valid(identifier),
+        'bet': db.query(Game).filter(Game.player == identifier).one().bet 
     }
+    print('Got doubledown and bet status')
 
     for card in player_hand:
         card_data = {
@@ -65,6 +79,8 @@ def update_table(identifier):
         }
 
         table_data['player_cards'].append(card_data)
+    
+    print('Got player images')
     
     for card in cpu_hand:
 
@@ -78,6 +94,8 @@ def update_table(identifier):
         }
         table_data['cpu_cards'].append(card_data)
     
+    print('Got cpu images')
+
     print(table_data)
 
     return table_data
@@ -105,33 +123,36 @@ def calculate_hand(identifier):
     
 def get_game_state(identifier):
     db = Session()
-
     game = db.query(Game).filter(Game.player == identifier).one()
 
     player_value = calculate_hand(identifier)
     cpu_value = calculate_hand(game.cpu_hand_identifier)
 
+    player_cards = db.query(Active_card).filter(Active_card.owner == identifier).count()
+    cpu_cards = db.query(Active_card).filter(Active_card.owner == game.cpu_hand_identifier).count()
+
     print('Player hand ' + str(player_value))
     print('Cpu hand ' + str(cpu_value))
-    
 
     if player_value > 21:
-        return Game_state.player_busted
+        current_gamestate = Game_state.player_busted
     elif cpu_value > 21:
-        return Game_state.cpu_busted
+        current_gamestate = Game_state.player_busted
 
-    elif cpu_value == 21 and db.query(Active_card).filter(Active_card.owner == game.cpu_hand_identifier).count() == 2:
-        return Game_state.cpu_blackjack
-    elif player_value == 21 and db.query(Active_card).filter(Active_card.owner == identifier).count() == 2:
-        return Game_state.player_blackjack
+    elif cpu_value == 21 and cpu_cards:
+        current_gamestate = Game_state.cpu_blackjack
+    elif player_value == 21 and player_cards:
+        current_gamestate = Game_state.player_blackjack
 
     elif player_value > cpu_value:
-        return Game_state.player_lead
+        current_gamestate = Game_state.player_lead
     elif player_value < cpu_value:
-        return Game_state.cpu_lead
+        current_gamestate = Game_state.cpu_lead
 
     elif player_value == cpu_value:
-        return Game_state.draw
+        current_gamestate = Game_state.draw
+    
+    return current_gamestate
 
 def simulate_cpu(identifier, socketio):
     db = Session()
@@ -188,3 +209,12 @@ def finish_game(identifier):
 
     return game_data
             
+def doubledown_valid(identifier):
+    db = Session()
+
+    hand_value = calculate_hand(identifier)
+
+    if db.query(Active_card).filter(Active_card.owner == identifier).count() == 2 and hand_value > 8 and hand_value < 12:
+        return True
+    else:
+        return False
