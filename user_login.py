@@ -1,5 +1,7 @@
 from flask import Flask, Blueprint, current_app, redirect, make_response
+
 from flask_openid import OpenID
+from flask_sqlalchemy import SQLAlchemy
 
 from user_handler import authorize_user
 
@@ -9,6 +11,7 @@ app = Flask(__name__)
 
 with app.app_context():
     oid = OpenID(current_app)
+    db = SQLAlchemy(current_app)
 
 @user_login_bp.route('/login', methods=['GET'])
 @oid.loginhandler
@@ -19,7 +22,7 @@ def open_id_login():
 def login_handling(steam_response):
     steamid = steam_response.identity_url.split('/')[5]
 
-    identifier = authorize_user(steamid)
+    identifier = authorize_user(steamid, db)
 
     resp = make_response(redirect('/'))
     resp.set_cookie('identifier', identifier)

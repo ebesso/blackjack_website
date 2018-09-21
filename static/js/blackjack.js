@@ -11,9 +11,13 @@ $(document).ready(function(){
     socket.on('connect', function(){
         console.log('Connected');
         socket.emit('client_connected', {'identifier': getCookie('identifier')});
+        socket.emit('client_balance', {'identifier': getCookie('identifier')});
+
     });
 
     socket.on('update_table', function(data){
+        socket.emit('client_balance', {'identifier': getCookie('identifier')});
+
         console.log('Updating table...');
 
         var table_data = JSON.parse(data);
@@ -44,6 +48,7 @@ $(document).ready(function(){
     });
 
     socket.on('game_finished', function(data){
+        socket.emit('client_balance', {'identifier': getCookie('identifier')});
 
         var game_data = JSON.parse(data);
         
@@ -69,6 +74,12 @@ $(document).ready(function(){
         var error_data = JSON.parse(data);
 
         alert(error_data.message);
+    });
+
+    socket.on('balance_update', function(data){
+        var balance_data = JSON.parse(data);
+        console.log('received balance update');
+        document.getElementById('user-balance').innerHTML = 'Balance: ' + balance_data.balance + '$';
     });
 
     $('#hit-button').click(function(){
@@ -98,5 +109,4 @@ $(document).ready(function(){
         var parts = value.split("; " + name + "=");
         if (parts.length == 2) return parts.pop().split(";").shift();
     }
-
 });

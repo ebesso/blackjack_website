@@ -14,8 +14,6 @@ def init_database():
 
     Base.metadata.create_all(bind=db_engine)
     db.commit()
-    
-
 
 def init_cards():
     db = Session()

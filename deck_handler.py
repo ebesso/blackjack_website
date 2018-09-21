@@ -5,25 +5,17 @@ from models import Active_card, Card, Status, Game
 
 import os, random
 
-db_engine = create_engine(os.environ['DATABASE_URL'])
-session_factory = sessionmaker(bind=db_engine)
-Session = scoped_session(session_factory)
-
-def init_deck(game_id):
-    db = Session()
-
-    for card in db.query(Card).all():
-        db.add(Active_card(card.id, game_id))
+def init_deck(game_id, db):
+    for card in db.session.query(Card).all():
+        db.session.add(Active_card(card.id, game_id))
         
-    db.commit()
+    db.session.commit()
 
-def draw(identifier, status):
-    db = Session()
-    
-    if db.query(Game).filter(Game.player == identifier).count():
-        deck = db.query(Active_card).filter(Active_card.game_identifier == db.query(Game).filter(Game.player == identifier).one().id).filter(Active_card.owner == None).all()
+def draw(identifier, status, db):    
+    if db.session.query(Game).filter(Game.player == identifier).count():
+        deck = db.session.query(Active_card).filter(Active_card.game_identifier == db.session.query(Game).filter(Game.player == identifier).one().id).filter(Active_card.owner == None).all()
     else:
-        deck = db.query(Active_card).filter(Active_card.game_identifier == db.query(Game).filter(Game.cpu_hand_identifier == identifier).one().id).filter(Active_card.owner == None).all()
+        deck = db.session.query(Active_card).filter(Active_card.game_identifier == db.session.query(Game).filter(Game.cpu_hand_identifier == identifier).one().id).filter(Active_card.owner == None).all()
 
     card = deck[random.randint(0, len(deck)) - 1]
 
@@ -32,4 +24,4 @@ def draw(identifier, status):
     card.owner = identifier
     card.status = status
 
-    db.commit()
+    db.session.commit()

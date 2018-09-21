@@ -6,9 +6,11 @@
     <script src="{{ url_for('static',filename='js/blackjack.js') }}"></script>
 
     <link rel="stylesheet" href="{{ url_for('static',filename='css/blackjack.css') }}"/>
-
-
+    <link rel="stylesheet" href="{{ url_for('static',filename='css/bootstrap.min.css') }}">
 </head>
+
+{% include "navigationbar.html" %}
+
 <body id="{{ website_info.url }}">
     <div id="player-hand"></div>
     <div id="cpu-hand"></div>
@@ -21,6 +23,8 @@
         <button class="control-button" id="replay-button">Replay</button>
 
         <p id="current-bet"></p>
+        <p id="balance-label"></p>
+
     </div>
 
     <h2 id="result-label"></h2>
