@@ -1,17 +1,16 @@
 from models import Game, User, Game_state
+from init_app import db
 
-from game_handler import get_game_state
-
-import configuration_handler
-
+from general_handlers import configuration_handler
+from singleplayer.handlers.game_handler import get_game_state
 import os
-
-def sufficent_funds(identifier, amount, db):
+            
+def sufficent_funds(identifier, amount):
     if amount > db.session.query(User).filter(User.identifier == identifier).one().balance:
         return False
     return True
 
-def double_bet(identifier, db):
+def double_bet(identifier):
     game = db.session.query(Game).filter(Game.player == identifier).one()
 
     user = db.session.query(User).filter(User.identifier == identifier).one()
@@ -22,12 +21,12 @@ def double_bet(identifier, db):
 
     db.session.commit()
 
-def payout_bet(identifier, db):
+def payout_bet(identifier):
     game = db.session.query(Game).filter(Game.player == identifier).one()
 
     payout_config = configuration_handler.load('payouts')
 
-    game_state = get_game_state(identifier, db)
+    game_state = get_game_state(identifier)
     print('Got game state')
 
     if game_state == Game_state.player_blackjack:
@@ -44,8 +43,7 @@ def payout_bet(identifier, db):
 
         print('Payed out ' + str(game.bet * float(payout_config.regular)))
 
-    
-def current_bet(identifier, db):
+def current_bet(identifier):
     return db.session.query(Game).filter(Game.player == identifier).one().bet
 
 

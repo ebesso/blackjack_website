@@ -1,17 +1,21 @@
 <html>
 <head>
+    <title>{{ website_info.name }}</title>
+
     <script src="{{ url_for('static',filename='js/jquery.min.js') }}"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/2.1.1/socket.io.dev.js"></script>
 
-    <script src="{{ url_for('static',filename='js/blackjack.js') }}"></script>
+    <script src="{{ url_for('static',filename='js/singleplayer/blackjack.js') }}"></script>
+    <script src="{{ url_for('static',filename='js/general_events.js') }}"></script>
+    
 
-    <link rel="stylesheet" href="{{ url_for('static',filename='css/blackjack.css') }}"/>
+    <link rel="stylesheet" href="{{ url_for('static',filename='css/singleplayer/blackjack.css') }}"/>
     <link rel="stylesheet" href="{{ url_for('static',filename='css/bootstrap.min.css') }}">
 </head>
 
 {% include "navigationbar.html" %}
 
-<body id="{{ website_info.url }}">
+<body data-website-domain="{{ website_info.url }}">
     <div id="player-hand"></div>
     <div id="cpu-hand"></div>
 

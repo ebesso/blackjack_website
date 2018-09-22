@@ -1,0 +1,23 @@
+<html>
+<head>
+    <title>{{ website_info.name }}</title>
+
+    <link rel="stylesheet" href="{{ url_for('static',filename='css/singleplayer/index.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static',filename='css/bootstrap.min.css') }}">
+
+</head>
+
+{% include "navigationbar.html" %}
+
+<body>
+    <h1 id="website-label" class="text-element">Welcome to {{ website_info.name }}</h1>
+
+    <form id="bet-form" method="POST" action="/single/join">
+        <h2 id="form-label" class="text-element form-input">Start game</h2>
+
+        <input type="number" name="bet-amount" id="bet-input" class="form-input" placeholder="Enter bet amount" required/>
+        <button type="submit" id="submit-button" class="form-input">Place bet</button>
+    </form>
+
+</body>
+</html>
