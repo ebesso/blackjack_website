@@ -1,13 +1,17 @@
-from models import Game, Active_card, Card, Status, Ranks, Game_state, User
+from models import Game, Active_card, Game_state, User, Status, Card
+from init_app import db, socketio
 
-from deck_handler import init_deck, draw
+from functools import wraps 
 
-import os, random, string, json
+from general_handlers.deck_handler import draw
+from general_handlers.game_handler import doubledown_valid, calculate_hand
 
-def init_game(player, bet, db):
+import random, string, json
+
+def init_game(player, bet):
 
     if db.session.query(Game).filter(Game.player == player).count():
-        delete_game(db.session.query(Game).filter(Game.player == player).one().id, db)
+        delete_game(db.session.query(Game).filter(Game.player == player).one().id)
 
     cpu_hand_identifier = ''.join(random.choice(string.ascii_uppercase + string.digits) for _ in range(45))
 
@@ -21,13 +25,13 @@ def init_game(player, bet, db):
 
     return db.session.query(Game).filter(Game.player == player).one().id
 
-def delete_game(gameid, db):
+def delete_game(gameid):
     db.session.query(Game).filter(Game.id == gameid).delete()
     db.session.query(Active_card).filter(Active_card.game_identifier == gameid).delete()
 
     db.session.commit()
 
-def isIngame(identifier, db):
+def isIngame(identifier):
     print('Validating identifier ' + identifier)
 
     if db.session.query(Game).filter(Game.player == identifier).count():
@@ -35,10 +39,10 @@ def isIngame(identifier, db):
     else:
         return False
 
-def get_cpu_identifier(identifier, db):
+def get_cpu_identifier(identifier):
     return db.session.query(Game).filter(Game.player == identifier).one().cpu_hand_identifier
 
-def update_table(identifier, db):    
+def update_table(identifier):    
     game = db.session.query(Game).filter(Game.player == identifier).one()
 
     player_hand = db.session.query(Active_card).filter(Active_card.owner == identifier).all()
@@ -49,7 +53,7 @@ def update_table(identifier, db):
     table_data = {
         'player_cards': [],
         'cpu_cards': [],
-        'doubledown': doubledown_valid(identifier, db),
+        'doubledown': doubledown_valid(identifier),
         'bet': db.session.query(Game).filter(Game.player == identifier).one().bet 
     }
     print('Got doubledown and bet status')
@@ -81,38 +85,11 @@ def update_table(identifier, db):
 
     return table_data
 
-def calculate_hand(identifier, db):
-    
-    hand = db.session.query(Active_card).filter(Active_card.owner == identifier).all()
-
-    hand_value = 0
-
-    contains_ace = False
-
-    for card in hand:
-        hand_value += db.session.query(Card).filter(Card.id == card.card_identifier).one().blackjack_value
-        if db.session.query(Card).filter(Card.id == card.card_identifier).one().rank == Ranks.ace:
-            contains_ace = True
-    
-    if contains_ace == False:
-        return hand_value
-    
-    if hand_value < 22:
-        return hand_value
-    
-    for card in hand:
-        if db.session.query(Card).filter(Card.id == card.card_identifier).one().rank == Ranks.ace:
-            hand_value -= 10
-            if hand_value < 22:
-                return hand_value
-    
-    return hand_value
-    
-def get_game_state(identifier, db):
+def get_game_state(identifier):
     game = db.session.query(Game).filter(Game.player == identifier).one()
 
-    player_value = calculate_hand(identifier, db)
-    cpu_value = calculate_hand(game.cpu_hand_identifier, db)
+    player_value = calculate_hand(identifier)
+    cpu_value = calculate_hand(game.cpu_hand_identifier)
 
     player_cards = db.session.query(Active_card).filter(Active_card.owner == identifier).count()
     cpu_cards = db.session.query(Active_card).filter(Active_card.owner == game.cpu_hand_identifier).count()
@@ -140,24 +117,17 @@ def get_game_state(identifier, db):
     
     return current_gamestate
 
-def isGameOver(identifier, db):
-    game_state = get_game_state(identifier, db)
-
-    if game_state == Game_state.cpu_blackjack or game_state == Game_state.player_blackjack or game_state == Game_state.player_busted:
-        return True
-    return False
-
-def simulate_cpu(identifier, socketio, db, sid):
+def simulate_cpu(identifier, sid):
     cpu_identifer = db.session.query(Game).filter(Game.player == identifier).one().cpu_hand_identifier
 
     while True:
-        if calculate_hand(cpu_identifer, db) > 16 or get_game_state == Game_state.player_busted:
+        if get_game_state(identifier) == Game_state.player_busted or calculate_hand(cpu_identifer) > 16:
             break
         else:
-            draw(cpu_identifer, Status.visible, db)
-            socketio.emit('update_table', json.dumps(update_table(identifier, db)), room=sid)
+            draw(cpu_identifer, Status.visible)
+            socketio.emit('update_table', json.dumps(update_table(identifier)), room=sid)
 
-def finish_game(identifier, db):
+def finish_game(identifier):
     game_data = {
         'player_cards': [],
         'cpu_cards': []
@@ -177,7 +147,7 @@ def finish_game(identifier, db):
 
         game_data['cpu_cards'].append(card_data)
     
-    game_state = get_game_state(identifier, db)
+    game_state = get_game_state(identifier)
 
     if game_state == Game_state.player_busted:
         game_data['result'] = 'You busted'
@@ -194,14 +164,27 @@ def finish_game(identifier, db):
     elif game_state == Game_state.draw:
         game_data['result'] = 'Draw'
     
-    delete_game(db.session.query(Game).filter(Game.player == identifier).one().id, db)
+    delete_game(db.session.query(Game).filter(Game.player == identifier).one().id)
 
     return game_data
-            
-def doubledown_valid(identifier, db):
-    hand_value = calculate_hand(identifier, db)
 
-    if db.session.query(Active_card).filter(Active_card.owner == identifier).count() == 2 and hand_value > 8 and hand_value < 12:
+def isGameOver(identifier):
+    game_state = get_game_state(identifier)
+
+    if game_state == Game_state.cpu_blackjack or game_state == Game_state.player_blackjack or game_state == Game_state.player_busted:
         return True
-    else:
-        return False
+    return False
+
+def validate_client(func):
+    @wraps(func)
+    def validate(data):
+        print('Validating client')        
+        if 'identifier' in data:
+            if isIngame(data['identifier']):
+                return func(data)
+            else:
+                return redirect('/')
+        else:
+            return redirect('/login')
+        
+    return validate

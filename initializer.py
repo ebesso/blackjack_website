@@ -1,23 +1,19 @@
 from models import Card, Ranks, Colors, Base
-
 from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker, scoped_session
+
+from init_app import db
 
 import os
 
-db_engine = create_engine(os.environ['DATABASE_URL'])
-session_factory = sessionmaker(bind=db_engine)
-Session = scoped_session(session_factory)
+def init():
+    init_database()
+    init_cards()
 
 def init_database():
-    db = Session()
-
-    Base.metadata.create_all(bind=db_engine)
-    db.commit()
+    Base.metadata.create_all(bind=create_engine(os.environ['DATABASE_URL']))
+    db.session.commit()
 
 def init_cards():
-    db = Session()
-
     cards = [
         Card(Ranks.two, Colors.clubs, '2C', 2, 2),
         Card(Ranks.two, Colors.diamonds, '2D', 2, 2),
@@ -86,6 +82,6 @@ def init_cards():
     ]
 
     for card in cards:
-        if db.query(Card).filter(Card.image_name == card.image_name).count() == False:
-            db.add(card)
-            db.commit()
+        if db.session.query(Card).filter(Card.image_name == card.image_name).count() == False:
+            db.session.add(card)
+            db.session.commit()

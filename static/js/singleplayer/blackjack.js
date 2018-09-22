@@ -1,12 +1,14 @@
+var socket;
+
 $(document).ready(function(){
 
     $('#replay-button').hide()
     $('#doubledown-button').hide()
 
-    var connection_string = document.getElementsByTagName('body')[0].getAttribute('id');
+    var connection_string = 'http://' + document.domain;
     console.log('Trying to connect to ' + connection_string);
 
-    var socket = io.connect(connection_string);
+    socket = io.connect(connection_string);
 
     socket.on('connect', function(){
         console.log('Connected');
@@ -68,18 +70,6 @@ $(document).ready(function(){
         
 
         document.getElementById('result-label').innerHTML = game_data.result;
-    });
-
-    socket.on('error', function(data){
-        var error_data = JSON.parse(data);
-
-        alert(error_data.message);
-    });
-
-    socket.on('balance_update', function(data){
-        var balance_data = JSON.parse(data);
-        console.log('received balance update');
-        document.getElementById('user-balance').innerHTML = 'Balance: ' + balance_data.balance + '$';
     });
 
     $('#hit-button').click(function(){
