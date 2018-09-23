@@ -3,7 +3,7 @@ from flask import request, redirect
 from functools import wraps
 import os, random, string
 
-from models import User
+from models import User, Active_player, Game, Active_card
 
 from init_app import db
 
@@ -55,4 +55,25 @@ def validate_user_identifier(func):
             return redirect('/login')
     return validate
 
+def identifier_to_steamid(identifier):
+    return db.session.query(User).filter(User.identifier == identifier).one().steamid
 
+def steamid_to_identifer(steamid):
+    return db.session.query(User).filter(User.steamid == steamid).one().identifier
+
+
+def remove_user_from_active_games(identifier):
+    if db.session.query(Game).filter(Game.player == identifier).count():
+        gameid = db.session.query(Game).filter(Game.player == identifier).one().id
+
+        db.session.query(Active_card).filter(Active_card.game_identifier == gameid).delete()
+        db.session.query(Game).filter(Game.id == gameid).delete()
+
+        db.session.commit()
+    
+    if db.session.query(Active_player).filter(Active_player.steamid == identifier_to_steamid(identifier)).count():
+        db.session.query(Active_player).filter(Active_player.steamid == identifier_to_steamid(identifier)).delete()
+
+        db.session.commit()
+
+        

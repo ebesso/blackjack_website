@@ -1,6 +1,6 @@
-from sqlalchemy import Column, String, Integer, Enum, Boolean
+from sqlalchemy import Column, String, Integer, Enum, Boolean, Float
 from sqlalchemy.ext.declarative import declarative_base
-import enum
+import enum, string, random
 
 Base = declarative_base()
 
@@ -42,6 +42,10 @@ class Game_state(enum.Enum):
 class Status(enum.Enum):
     visible = 1
     hidden = 2
+
+class Player_status(enum.Enum):
+    stand = 1
+    active = 2
 
 class Card(Base):
     __tablename__ = 'cards'
@@ -86,7 +90,7 @@ class Game(Base):
     id = Column('id', Integer, primary_key=True)
 
     player = Column('player', String, unique=True)
-    bet = Column('bet', Integer, nullable=False)
+    bet = Column('bet', Float, nullable=False)
 
     cpu_hand_identifier = Column('cpu_hand_identifier', String, unique=True)
 
@@ -110,6 +114,38 @@ class Active_card(Base):
     def __init__(self, card_identifier, game_identifier):
         self.card_identifier = card_identifier
         self.game_identifier = game_identifier
+
+class Table(Base):
+    __tablename__ = 'tables'
+
+    id = Column('id', Integer, primary_key=True)
+
+    identifier = Column('identifer', String, unique=True)
+    player_turn = Column('player_turn', Integer)
+    deck_identifer = Column('deck_identifier', String, unique=True)
+
+    def __init__(self):
+        self.identifier = ''.join(random.choice(string.ascii_uppercase + string.digits) for _ in range(6))
+        self.deck_identifer = ''.join(random.choice(string.ascii_uppercase + string.digits) for _ in range(20))
+
+class Active_player(Base):
+    __tablename__ = 'active_players'
+
+    id = Column('id', Integer, primary_key=True)
+
+    steamid = Column('steamid', String, unique=True)
+    table_id = Column('table_id', Integer)
+    session_id = Column('session_id', String)
+
+    bet = Column('bet', Float)
+
+    status = Column('status', Enum(Player_status))
+    status_string = Column('status_string', String, nullable=False)
+
+    def __init__(self, steamid, table_id):
+        self.steamid = steamid
+        self.table_id = table_id
+        self.status_string = 'Waiting'
 
 class Empty(object):
     def __getattr__(self, prop):

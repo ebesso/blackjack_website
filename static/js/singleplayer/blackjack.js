@@ -12,7 +12,7 @@ $(document).ready(function(){
 
     socket.on('connect', function(){
         console.log('Connected');
-        socket.emit('client_connected', {'identifier': getCookie('identifier')});
+        socket.emit('single_client_connected', {'identifier': getCookie('identifier')});
         socket.emit('client_balance', {'identifier': getCookie('identifier')});
 
     });
@@ -73,13 +73,13 @@ $(document).ready(function(){
     });
 
     $('#hit-button').click(function(){
-        socket.emit('client_hit', {'identifier': getCookie('identifier')});
+        socket.emit('single_client_hit', {'identifier': getCookie('identifier')});
     });
     $('#stand-button').click(function(){
-        socket.emit('client_stand', {'identifier': getCookie('identifier')});
+        socket.emit('single_client_stand', {'identifier': getCookie('identifier')});
     });
     $('#doubledown-button').click(function(){
-        socket.emit('client_doubledown', {'identifier': getCookie('identifier')});
+        socket.emit('single_client_doubledown', {'identifier': getCookie('identifier')});
     });
 
     $('#replay-button').click(function(){

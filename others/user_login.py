@@ -3,10 +3,9 @@ from init_app import oid
 
 from general_handlers.user_handler import authorize_user
 
-user_login = Blueprint('user_login', __name__)
+from . import others
 
-
-@user_login.route('/login', methods=['GET'])
+@others.route('/login', methods=['GET'])
 @oid.loginhandler
 def open_id_login():
     return oid.try_login('http://steamcommunity.com/openid')

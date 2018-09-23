@@ -1,0 +1,22 @@
+<html>
+<head>
+    <title>{{ website_info.name }}</title>
+
+    <script src="{{ url_for('static',filename='js/jquery.min.js') }}"></script>
+        
+    <link rel="stylesheet" href="{{ url_for('static',filename='css/multiplayer/index.css') }}"/>
+    <link rel="stylesheet" href="{{ url_for('static',filename='css/bootstrap.min.css') }}">
+
+</head>
+{% include "navigationbar.html" %}
+<body>
+    <h1 id="website-label">Join table</h1>
+
+    <div id="option-container">
+        <form action="/multi/join" method="POST">
+            <input type="text" placeholder="Enter room code; Leave empty for autojoin" name="room_key" id="key-input"/>
+            <button id="submit-button" type="submit">Join</button>
+        </form>
+    </div>
+</body>
+</html>

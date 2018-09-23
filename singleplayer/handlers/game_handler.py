@@ -1,22 +1,24 @@
 from models import Game, Active_card, Game_state, User, Status, Card
 from init_app import db, socketio
 
+from flask import redirect
 from functools import wraps 
 
 from general_handlers.deck_handler import draw
 from general_handlers.game_handler import doubledown_valid, calculate_hand
+from general_handlers.user_handler import remove_user_from_active_games
+from general_handlers.balance_handler import remove_balance
 
 import random, string, json
 
 def init_game(player, bet):
 
-    if db.session.query(Game).filter(Game.player == player).count():
-        delete_game(db.session.query(Game).filter(Game.player == player).one().id)
+    remove_user_from_active_games(player)
 
     cpu_hand_identifier = ''.join(random.choice(string.ascii_uppercase + string.digits) for _ in range(45))
 
-    user = db.session.query(User).filter(User.identifier == player).one()
-    user.balance -= bet
+    remove_balance(player, bet)
+
     print('Removed bet amount from user')
 
     db.session.add(Game(player, bet, cpu_hand_identifier))
@@ -24,12 +26,6 @@ def init_game(player, bet):
     print('Init game + commited to database')
 
     return db.session.query(Game).filter(Game.player == player).one().id
-
-def delete_game(gameid):
-    db.session.query(Game).filter(Game.id == gameid).delete()
-    db.session.query(Active_card).filter(Active_card.game_identifier == gameid).delete()
-
-    db.session.commit()
 
 def isIngame(identifier):
     print('Validating identifier ' + identifier)

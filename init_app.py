@@ -19,11 +19,11 @@ def create_app(debug_mode):
 
     from others import others as others_bp
     from singleplayer import singleplayer as singleplayer_bp
-    from user_login import user_login as user_login_bp
+    from multiplayer import multiplayer as multiplayer_bp
 
     app.register_blueprint(others_bp)
+    app.register_blueprint(multiplayer_bp)
     app.register_blueprint(singleplayer_bp)
-    app.register_blueprint(user_login_bp)
 
     socketio.init_app(app)
     db.init_app(app)

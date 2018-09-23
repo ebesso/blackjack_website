@@ -7,11 +7,12 @@ from models import Status
 from general_handlers.deck_handler import draw
 from general_handlers.game_handler import doubledown_valid
 from singleplayer.handlers.game_handler import get_cpu_identifier, isGameOver, validate_client, update_table, simulate_cpu, finish_game
-from general_handlers.balance_handler import payout_bet, sufficent_funds, current_bet, double_bet
+from general_handlers.balance_handler import sufficent_funds
+from singleplayer.handlers.balance_handler import payout_bet, double_bet, current_bet
 
 import json
 
-@socketio.on('client_connected')
+@socketio.on('single_client_connected')
 @validate_client
 def client_connect(data):
     print('Client has connected')
@@ -27,7 +28,7 @@ def client_connect(data):
     if isGameOver(data['identifier']):
         client_stand(data)
 
-@socketio.on('client_hit')
+@socketio.on('single_client_hit')
 @validate_client
 def client_hit(data):
     draw(data['identifier'], Status.visible)
@@ -37,7 +38,7 @@ def client_hit(data):
     if isGameOver(data['identifier']):
         client_stand(data)
 
-@socketio.on('client_stand')
+@socketio.on('single_client_stand')
 @validate_client
 def client_stand(data):
     simulate_cpu(data['identifier'], request.sid)
@@ -45,7 +46,7 @@ def client_stand(data):
     
     socketio.emit('game_finished', json.dumps(finish_game(data['identifier'])), room=request.sid)
 
-@socketio.on('client_doubledown')
+@socketio.on('single_client_doubledown')
 @validate_client
 def client_doubledown(data):
     if doubledown_valid(data['identifier']):
