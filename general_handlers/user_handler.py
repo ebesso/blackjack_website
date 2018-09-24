@@ -61,19 +61,16 @@ def identifier_to_steamid(identifier):
 def steamid_to_identifer(steamid):
     return db.session.query(User).filter(User.steamid == steamid).one().identifier
 
+def remove_user_from_active_games(steamid):
+    if db.session.query(Game).filter(Game.player_steamid == steamid).count():
+        deck_identifier = db.session.query(Game).filter(Game.player_steamid == steamid).one().deck_identifier
 
-def remove_user_from_active_games(identifier):
-    if db.session.query(Game).filter(Game.player == identifier).count():
-        gameid = db.session.query(Game).filter(Game.player == identifier).one().id
-
-        db.session.query(Active_card).filter(Active_card.game_identifier == gameid).delete()
-        db.session.query(Game).filter(Game.id == gameid).delete()
+        db.session.query(Active_card).filter(Active_card.deck_identifier == deck_identifier).delete()
+        db.session.query(Game).filter(Game.deck_identifier == deck_identifier).delete()
 
         db.session.commit()
     
-    if db.session.query(Active_player).filter(Active_player.steamid == identifier_to_steamid(identifier)).count():
-        db.session.query(Active_player).filter(Active_player.steamid == identifier_to_steamid(identifier)).delete()
+    if db.session.query(Active_player).filter(Active_player.steamid == steamid).count():
+        db.session.query(Active_player).filter(Active_player.steamid == steamid).delete()
 
         db.session.commit()
-
-        

@@ -3,9 +3,9 @@ from init_app import db
 
 import os, random, string, json
 
-def calculate_hand(identifier):
+def calculate_hand(steamid):
     
-    hand = db.session.query(Active_card).filter(Active_card.owner == identifier).all()
+    hand = db.session.query(Active_card).filter(Active_card.owner == steamid).all()
 
     hand_value = 0
 
@@ -30,10 +30,10 @@ def calculate_hand(identifier):
     
     return hand_value
     
-def doubledown_valid(identifier):
-    hand_value = calculate_hand(identifier)
+def doubledown_valid(steamid):
+    hand_value = calculate_hand(steamid)
 
-    if db.session.query(Active_card).filter(Active_card.owner == identifier).count() == 2 and hand_value > 8 and hand_value < 12:
+    if db.session.query(Active_card).filter(Active_card.owner == steamid).count() == 2 and hand_value > 8 and hand_value < 12:
         return True
     else:
         return False

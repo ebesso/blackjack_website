@@ -1,20 +1,19 @@
 from init_app import db
 
 from models import Active_card, Card, Status, Game
+from general_handlers.user_handler import identifier_to_steamid
 
 import os, random
 
-def init_deck(game_id):
+def init_deck(deck_identifier):
     for card in db.session.query(Card).all():
-        db.session.add(Active_card(card.id, game_id))
+        db.session.add(Active_card(card.id, deck_identifier))
         
     db.session.commit()
 
-def draw(identifier, status):    
-    if db.session.query(Game).filter(Game.player == identifier).count():
-        deck = db.session.query(Active_card).filter(Active_card.game_identifier == db.session.query(Game).filter(Game.player == identifier).one().id).filter(Active_card.owner == None).all()
-    else:
-        deck = db.session.query(Active_card).filter(Active_card.game_identifier == db.session.query(Game).filter(Game.cpu_hand_identifier == identifier).one().id).filter(Active_card.owner == None).all()
+def draw(identifier, deck_identifier, status):
+
+    deck = db.session.query(Active_card).filter(Active_card.deck_identifier == deck_identifier).filter(Active_card.owner == None).all()
 
     card = deck[random.randint(0, len(deck)) - 1]
 

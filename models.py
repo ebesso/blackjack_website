@@ -89,31 +89,33 @@ class Game(Base):
 
     id = Column('id', Integer, primary_key=True)
 
-    player = Column('player', String, unique=True)
+    player_steamid = Column('player', String, unique=True)
     bet = Column('bet', Float, nullable=False)
 
     cpu_hand_identifier = Column('cpu_hand_identifier', String, unique=True)
+    deck_identifier = Column('deck_identifier', String, unique=True)
 
-    def __init__(self, player, bet, cpu_hand_identifier):
-        self.player = player
+    def __init__(self, steamid, bet, cpu_hand_identifier):
+        self.player_steamid = steamid
         self.bet = bet
         self.cpu_hand_identifier = cpu_hand_identifier
+        self.deck_identifier = ''.join(random.choice(string.ascii_uppercase + string.digits) for _ in range(40))
 
 class Active_card(Base):
     __tablename__ = 'active_cards'
 
     id = Column('id', Integer, primary_key=True)
 
-    game_identifier = Column('game_identifier', Integer, nullable=False)
+    deck_identifier = Column('deck_identifier', String, nullable=False)
     card_identifier = Column('card_identifier', Integer, nullable=False)
 
     status = Column('status', Enum(Status))
 
     owner = Column('owner', String)
 
-    def __init__(self, card_identifier, game_identifier):
+    def __init__(self, card_identifier, deck_identifier):
         self.card_identifier = card_identifier
-        self.game_identifier = game_identifier
+        self.deck_identifier = deck_identifier
 
 class Table(Base):
     __tablename__ = 'tables'
@@ -122,11 +124,11 @@ class Table(Base):
 
     identifier = Column('identifer', String, unique=True)
     player_turn = Column('player_turn', Integer)
-    deck_identifer = Column('deck_identifier', String, unique=True)
+    deck_identifier = Column('deck_identifier', String, unique=True)
 
-    def __init__(self):
+    def __init__(self, deck_identifier):
         self.identifier = ''.join(random.choice(string.ascii_uppercase + string.digits) for _ in range(6))
-        self.deck_identifer = ''.join(random.choice(string.ascii_uppercase + string.digits) for _ in range(20))
+        self.deck_identifier = deck_identifier
 
 class Active_player(Base):
     __tablename__ = 'active_players'
@@ -142,9 +144,13 @@ class Active_player(Base):
     status = Column('status', Enum(Player_status))
     status_string = Column('status_string', String, nullable=False)
 
+    has_played = Column('has_played', Boolean)
+
     def __init__(self, steamid, table_id):
         self.steamid = steamid
         self.table_id = table_id
+        self.has_played = False
+        
         self.status_string = 'Waiting'
 
 class Empty(object):

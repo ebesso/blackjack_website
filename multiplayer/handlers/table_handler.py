@@ -1,4 +1,4 @@
-from init_app import db
+from init_app import db, socketio
 
 from functools import wraps
 from flask import redirect
@@ -6,13 +6,15 @@ from flask import redirect
 from general_handlers import configuration_handler
 from general_handlers.user_handler import identifier_to_steamid, steamid_to_identifer, remove_user_from_active_games
 from general_handlers import balance_handler
+from general_handlers.deck_handler import init_deck
 
 from models import User, Table, Active_player, Player_status
 
-def isTable_empty(table_id):
-    if db.session.query(Active_player).filter(Active_player.table_id == table_id).count() < 2:
-        return True
-    return False
+import random, string, enum, json
+
+class options(enum.Enum):
+    play = 1
+    bet = 2
 
 def table_exist(identifier):
     if db.session.query(Table).filter(Table.identifier == identifier).count():
@@ -28,7 +30,7 @@ def identifier_to_id(identifier):
     return db.session.query(Table).filter(Table.identifier == identifier).one().id
 
 def join_table(table_id, steamid):
-    remove_user_from_active_games(steamid_to_identifer(steamid))
+    remove_user_from_active_games(steamid)
 
     player = Active_player(steamid, table_id)
     
@@ -53,7 +55,10 @@ def auto_join(steamid):
     auto_join(steamid)
 
 def create_table():
-    db.session.add(Table())
+    deck_identifier = ''.join(random.choice(string.ascii_uppercase + string.digits) for _ in range(40))
+    init_deck(deck_identifier)
+
+    db.session.add(Table(deck_identifier))
     db.session.commit()
 
 def isIngame(identifier):
@@ -61,20 +66,6 @@ def isIngame(identifier):
        return True 
 
     return False
-
-def validate_client(func):
-    @wraps(func)
-    def validate(data):
-        print('Validating client')        
-        if 'identifier' in data:
-            if isIngame(data['identifier']):
-                return func(data)
-            else:
-                return redirect('/')
-        else:
-            return redirect('/login')
-        
-    return validate
 
 def get_current_table(steamid):
     return db.session.query(Table).filter(Table.id == db.session.query(Active_player).filter(Active_player.steamid == steamid).one().table_id).one()
@@ -100,6 +91,31 @@ def validate_bet(identifier, amount):
             return 'You have already placed bet'
         return 'Insufficent funds'
     return 'Bets not allowed atm'
+
+def send_options(steamid, option):
+    sid = db.session.query(Active_player).filter(Active_player.steamid == steamid).one().session_id
+
+    if option == options.bet:
+        option_data = {
+            'message': 'Please bet',
+            'action_required': 'bet'
+        }
+    
+    socketio.emit('client_action_required', json.dumps(option_data), room=sid)
+
+def validate_client(func):
+    @wraps(func)
+    def validate(data):
+        print('Validating client')        
+        if 'identifier' in data:
+            if isIngame(data['identifier']):
+                return func(data)
+            else:
+                return redirect('/')
+        else:
+            return redirect('/login')
+        
+    return validate
 
         
             

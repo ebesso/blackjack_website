@@ -21,6 +21,12 @@ $(document).ready(function(){
         var message_data = JSON.parse(data);        
         alert(message_data.message);
     });
+    socket.on('client_action_required', function(data){
+        console.log('Received action required');
+        
+        var action_data = JSON.parse(data);        
+        alert(action_data.message);
+    });
 
     function getCookie(name) {
         var value = "; " + document.cookie;

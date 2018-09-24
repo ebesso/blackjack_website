@@ -13,8 +13,8 @@ def single_index():
 @user_handler.validate_user_identifier
 def join_game():
     if balance_handler.sufficent_funds(request.cookies.get('identifier'), float(request.form['bet-amount'])):
-        gameid = game_handler.init_game(request.cookies.get('identifier'), float(request.form['bet-amount']))
-        deck_handler.init_deck(gameid)
+        deck_identifier = game_handler.init_game(request.cookies.get('identifier'), float(request.form['bet-amount']))
+        deck_handler.init_deck(deck_identifier)
 
         return render_template('singleplayer/blackjack.html', website_info=configuration_handler.load('website'))
 
