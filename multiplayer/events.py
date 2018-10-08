@@ -25,7 +25,6 @@ def client_connect(data):
         socketio.emit('client_message', {'message': 'Wait till next round'}, room=request.sid)
 
     round_handler.round_action(data['identifier'])
-    
 
 @socketio.on('multi_client_action')
 def client_action(data):
