@@ -22,17 +22,17 @@ def client_connect(data):
     db.session.commit()
 
     if table_handler.get_turn(table_handler.get_current_table(identifier_to_steamid(data['identifier'])).id) != None:
-        socketio.emit('client_message', {'message': 'Wait till next round'}, room=request.sid)
+        socketio.emit('client_message', json.dumps({'message': 'Wait till next round'}), room=request.sid)
 
     round_handler.round_action(data['identifier'])
 
 @socketio.on('multi_client_action')
 def client_action(data):
     if data['action'] == 'bet':
-        response = table_handler.validate_bet(data['identifier'], data['amount'])
-        socketio.emit('client_message', {'message': response}, room=request.sid)
+        response = table_handler.validate_bet(data['identifier'], int(data['amount']))
+        print(response)
+        socketio.emit('client_message', json.dumps({'message': response}), room=request.sid)
 
     elif data['action'] == 'hit':
         draw(identifier_to_steamid(data['identifier']), table_handler.get_current_table(identifier_to_steamid(data['identifier'])).deck_identifier, Status.visible)
     
-    round_handler.round_action(data['identifier'])

@@ -7,7 +7,7 @@ from general_handlers.user_handler import identifier_to_steamid
 from models import Active_player, Player_status, Table
 
 def round_over(table_id):
-    if db.session.query(Active_player).filter(Active_player.table_id == table_id).filter(Active_player.status == Player_status.active).count:
+    if db.session.query(Active_player).filter(Active_player.table_id == table_id).filter(Active_player.status == Player_status.active).count():
         return False
     return True
 

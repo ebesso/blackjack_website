@@ -15,18 +15,37 @@ $(document).ready(function(){
         socket.emit('multi_client_connect', {'identifier': getCookie('identifier')});
         socket.emit('client_balance', {'identifier': getCookie('identifier')});
 
+        hideControlls();
+
     });
 
     socket.on('client_message', function(data){
-        var message_data = JSON.parse(data);        
+        var message_data = JSON.parse(data);   
+        console.log(message_data);     
         alert(message_data.message);
     });
     socket.on('client_action_required', function(data){
+        hideControlls()
+
         console.log('Received action required');
         
         var action_data = JSON.parse(data);        
         alert(action_data.message);
+
+        if(action_data.action_required == 'bet'){
+            $('#bet-controlls').show();
+        }
     });
+
+    $('#bet-submit').click(function(){
+        bet_amount = $('#bet-amount').val();
+        console.log(bet_amount);
+        socket.emit('multi_client_action', {'action': 'bet', 'identifier': getCookie('identifier'), 'amount': bet_amount});
+    });
+
+    function hideControlls(){
+        $('#bet-controlls').hide();
+    }
 
     function getCookie(name) {
         var value = "; " + document.cookie;
