@@ -3,11 +3,14 @@ from flask_socketio import SocketIO
 from flask_sqlalchemy import SQLAlchemy
 from flask_openid import OpenID
 
-import os
+import os, logging
 
 socketio = SocketIO()
 db = SQLAlchemy()
 oid = OpenID()
+
+log = logging.getLogger('werkzeug')
+log.setLevel(logging.ERROR)
 
 def create_app(debug_mode):
     app = Flask(__name__)

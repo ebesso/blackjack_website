@@ -84,6 +84,8 @@ def validate_bet(identifier, amount):
                 player = db.session.query(Active_player).filter(Active_player.steamid == steamid).one()
                 player.bet = amount
                 player.status_string = 'Betted ' + str(amount) + '$'
+                player.has_played = True
+                player.status = Player_status.active
 
                 db.session.commit()
 
@@ -100,7 +102,13 @@ def send_options(steamid, option):
             'message': 'Please bet',
             'action_required': 'bet'
         }
-    
+
+    elif option == options.play:
+        option_data = {
+            'message': 'Make a play',
+            'action_required': 'play'
+        }
+
     socketio.emit('client_action_required', json.dumps(option_data), room=sid)
 
 def validate_client(func):

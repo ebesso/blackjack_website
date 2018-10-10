@@ -21,7 +21,6 @@ $(document).ready(function(){
 
     socket.on('client_message', function(data){
         var message_data = JSON.parse(data);   
-        console.log(message_data);     
         alert(message_data.message);
     });
     socket.on('client_action_required', function(data){
@@ -35,6 +34,10 @@ $(document).ready(function(){
         if(action_data.action_required == 'bet'){
             $('#bet-controlls').show();
         }
+    });
+    
+    socket.on('action_confirmed', function(){
+        hideControlls();
     });
 
     $('#bet-submit').click(function(){
