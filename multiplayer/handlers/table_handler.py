@@ -4,11 +4,11 @@ from functools import wraps
 from flask import redirect
 
 from general_handlers import configuration_handler
-from general_handlers.user_handler import identifier_to_steamid, steamid_to_identifer, remove_user_from_active_games
+from general_handlers.user_handler import identifier_to_steamid, steamid_to_identifer, remove_user_from_active_games, steamid_to_name
 from general_handlers import balance_handler
 from general_handlers.deck_handler import init_deck
 
-from models import User, Table, Active_player, Player_status
+from models import User, Table, Active_player, Player_status, Active_card, Status, Card
 
 import random, string, enum, json
 
@@ -110,6 +110,35 @@ def send_options(steamid, option):
         }
 
     socketio.emit('client_action_required', json.dumps(option_data), room=sid)
+
+def update_table(identifier):
+    steamid = identifier_to_steamid(identifier)
+
+    table = get_current_table(steamid)
+
+    player_objects = []
+
+    for player in db.session.query(Active_player).filter(Active_player.table_id == table.id).all():
+        player_obj = {
+            'name': steamid_to_name(player.steamid),
+            'status_string': player.status_string,
+            'cards': [],
+            'bet': player.bet
+        }
+
+        for card in db.session.query(Active_card).filter(Active_card.owner == player.steamid):
+            if card.status == Status.hidden:
+                player_obj['cards'].append('green_back')
+            else:
+                player_obj['cards'].append(db.session.query(Card).filter(Card.id == card.card_identifier).one().image_name)
+        
+        player_objects.append(player_obj)
+    
+    emit_to_table(get_current_table(steamid).id, 'update_table', json.dumps(player_objects))
+    
+def emit_to_table(table_id, event_name, data):
+    for player in db.session.query(Active_player).filter(Active_player.table_id == table_id).all():
+        socketio.emit(event_name, data, room=player.session_id)
 
 def validate_client(func):
     @wraps(func)

@@ -35,6 +35,10 @@ $(document).ready(function(){
             $('#bet-controlls').show();
         }
     });
+
+    socket.on('update_table', function(data){
+        console.log(data);
+    });
     
     socket.on('action_confirmed', function(){
         hideControlls();

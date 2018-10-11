@@ -1,7 +1,9 @@
 from flask import request, redirect
 
 from functools import wraps
-import os, random, string
+import os, random, string, requests
+
+from general_handlers import configuration_handler
 
 from models import User, Active_player, Game, Active_card
 
@@ -74,3 +76,10 @@ def remove_user_from_active_games(steamid):
         db.session.query(Active_player).filter(Active_player.steamid == steamid).delete()
 
         db.session.commit()
+    
+def steamid_to_name(steamid):
+    config = configuration_handler.load('keys')
+
+    response = requests.get(' http://api.steampowered.com/ISteamUser/GetPlayerSummaries/v0002/?key={0}&steamids={1}'.format(config.steam_api_key, steamid))
+
+    return response.json()['response']['players'][0]['personaname']

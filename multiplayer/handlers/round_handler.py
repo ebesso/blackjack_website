@@ -1,6 +1,6 @@
 from init_app import db, socketio
 
-from multiplayer.handlers.table_handler import get_current_table, get_turn, send_options, options
+from multiplayer.handlers.table_handler import get_current_table, get_turn, send_options, options, update_table
 
 from general_handlers.user_handler import identifier_to_steamid 
 
@@ -56,3 +56,5 @@ def round_action(identifier):
     
     else:
         print('No action required')
+    
+    update_table(steamid)
