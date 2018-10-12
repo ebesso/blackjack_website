@@ -57,4 +57,4 @@ def round_action(identifier):
     else:
         print('No action required')
     
-    update_table(steamid)
+    update_table(identifier)
